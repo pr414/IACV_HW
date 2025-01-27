@@ -1,0 +1,53 @@
+2.5 Point Rectification for Curve S
+clc; close all; clear all;
+
+% Load required data
+load("transformation_matrix.mat", "T"); % Transformation T for lower face mapping (m5, m6)
+load("curves.mat", "curve_s"); % Points of Curve S as [x, y, w] rows
+image = imread('Look-outCat.jpg');
+
+% Display the original image
+figure;
+imshow(image);
+title('Original Image');
+hold on;
+
+% Plot the original Curve S on the image
+original_x = curve_s(:, 1) ./ curve_s(:, 3);
+original_y = curve_s(:, 2) ./ curve_s(:, 3);
+plot(original_x, original_y, 'r-', 'LineWidth', 2);
+legend('Original Curve S');
+hold off;
+
+% Perform metric rectification
+curve_s_rectified = (T * curve_s').'; % Transpose for multiplication and back
+
+% Normalize the homogeneous coordinates
+curve_s_rectified(:, 1) = curve_s_rectified(:, 1) ./ curve_s_rectified(:, 3);
+curve_s_rectified(:, 2) = curve_s_rectified(:, 2) ./ curve_s_rectified(:, 3);
+curve_s_rectified(:, 3) = 1;
+
+% Plot the rectified Curve S
+figure;
+plot(curve_s_rectified(:, 1), curve_s_rectified(:, 2), 'b-', 'LineWidth', 2);
+title('Rectified Curve S');
+xlabel('X');
+ylabel('Y');
+legend('Rectified Curve S');
+axis equal;
+grid on;
+
+% Adjust display format
+format long g;
+
+% Display the original points in homogeneous coordinates
+disp('Original Curve S Points (in homogeneous coordinates):');
+disp(curve_s);
+
+% Display the rectified points in homogeneous coordinates
+disp('Rectified Curve S Points (in homogeneous coordinates):');
+disp(curve_s_rectified);
+
+% Display the rectified points
+disp('Rectified Curve S Points (in Cartesian coordinates):');
+disp(curve_s_rectified(:, 1:2)); % Only display x and y
