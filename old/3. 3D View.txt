@@ -1,0 +1,59 @@
+3. 3D View
+load("depth.mat");
+load("height_h.mat");
+
+
+
+% Define the dimensions of the parallelepiped
+l = 1; % Length (X-axis)
+m = depth_m; % Depth (Y-axis)
+h = height_h; % Height (Z-axis)
+
+% Define the vertices of the parallelepiped
+vertices = [
+    0, 0, 0; % Vertex 1
+    l, 0, 0; % Vertex 2
+    l, m, 0; % Vertex 3
+    0, m, 0; % Vertex 4
+    0, 0, h; % Vertex 5
+    l, 0, h; % Vertex 6
+    l, m, h; % Vertex 7
+    0, m, h; % Vertex 8
+];
+
+% Define the faces of the parallelepiped using the vertices
+faces = [
+    1, 2, 6, 5; % Bottom face
+    2, 3, 7, 6; % Front face
+    3, 4, 8, 7; % Top face
+    4, 1, 5, 8; % Back face
+    1, 2, 3, 4; % Left face
+    5, 6, 7, 8; % Right face
+];
+
+% Plot the parallelepiped in 3D
+figure;
+
+% First view
+subplot(1, 3, 1);
+patch('Vertices', vertices, 'Faces', faces, ...
+      'FaceColor', 'cyan', 'EdgeColor', 'black', 'FaceAlpha', 0.7);
+xlabel('X'); ylabel('Y'); zlabel('Z');
+title('View 1');
+grid on; axis equal; view(30, 30); % Adjust view angle
+
+% Second view
+subplot(1, 3, 2);
+patch('Vertices', vertices, 'Faces', faces, ...
+      'FaceColor', 'magenta', 'EdgeColor', 'black', 'FaceAlpha', 0.7);
+xlabel('X'); ylabel('Y'); zlabel('Z');
+title('View 2');
+grid on; axis equal; view(-30, 30); % Adjust view angle
+
+% Third view
+subplot(1, 3, 3);
+patch('Vertices', vertices, 'Faces', faces, ...
+      'FaceColor', 'yellow', 'EdgeColor', 'black', 'FaceAlpha', 0.7);
+xlabel('X'); ylabel('Y'); zlabel('Z');
+title('View 3');
+grid on; axis equal; view(60, 60); % View from 60 degrees

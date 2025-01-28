@@ -1,0 +1,108 @@
+2.4 Height h
+clc; close all; clear all;
+
+% Load required data
+load("transformation_matrix.mat"); % Homography T
+load("vanishing_points_l1_l3.mat"); % Vanishing points v_l1_l3
+load("vanishing_points_m1_m6.mat"); % Vanishing points v_m1_m6
+load("vanishing_points_h1_h2.mat"); % Vanishing points v_h1_h2
+load("lines_homogeneous_l.mat"); % Lines l_i
+load("lines_homogeneous_h.mat"); % Lines h_j
+load("calibration_matrix.mat"); % Calibration matrix K
+load("points_set_l.mat"); % Points A', B', C', and D'
+image = imread('Look-outCat.jpg');
+omega = inv(K * K'); % Image of Absolute Conic (IAC)
+
+% Step 1: Compute the vanishing line of the vertical plane
+l1_inf_prime = cross(v_h1_h2, v_l1_l3); % Vanishing line of the vertical plane
+l1_inf_prime = l1_inf_prime / l1_inf_prime(3); % Normalize
+
+% Step 2: Compute the circular points
+syms x y;
+I_prime = [x; y; 1]; % Circular point I'
+eq1 = l1_inf_prime' * I_prime == 0; % Circular point lies on l1_inf_prime
+eq2 = I_prime.' * omega * I_prime == 0; % Circular point lies on IAC
+sol_I = solve([eq1, eq2], [x, y]); % Solve the equations
+
+% Extract solutions for circular points I' and J'
+I_prime = [double(sol_I.x(1)); double(sol_I.y(1)); 1];
+J_prime = [double(sol_I.x(2)); double(sol_I.y(2)); 1];
+
+% Step 3: Compute the image of the conic dual to the circular points
+C_star_1_inf_prime = I_prime * J_prime.' + J_prime * I_prime.';
+
+% Step 4: Perform SVD to compute the rectifying transformation HRvert
+[U, S, ~] = svd(C_star_1_inf_prime); % Singular Value Decomposition
+a = S(1, 1);
+b = S(2, 2);
+HRvert = diag([sqrt(1/a), sqrt(1/b), 1]) * U'; % Rectifying transformation
+
+% Step 5: Rectify all points A', B', C', and D'
+A = points_set_l(:, 1); % A'
+B = points_set_l(:, 2); % B'
+C = points_set_l(:, 3); % C'
+D = points_set_l(:, 4); % D'
+
+% Rectify points
+A_vert = HRvert * A;
+B_vert = HRvert * B;
+C_vert = HRvert * C;
+D_vert = HRvert * D;
+
+% Normalize rectified points
+A_vert = A_vert / A_vert(3);
+B_vert = B_vert / B_vert(3);
+C_vert = C_vert / C_vert(3);
+D_vert = D_vert / D_vert(3);
+
+% Step 6: Rectify the image
+tform = projective2d(HRvert'); % Transformation for rectification
+rectified_image = imwarp(image, tform);
+
+% Compute the Euclidean distance between point 1 and point 3 (known as 1 meter)
+distance_1_3 = norm(A_vert(1:2) - B_vert(1:2)); % 2D distance (ignore homogeneous coordinate)
+
+% Compute the Euclidean distance between point 1 and point 2 (unknown height)
+distance_1_2 = norm(A_vert(1:2) - C_vert(1:2)); % 2D distance
+
+% Scale the distance based on the known length (1 meter for side 1-3)
+scale_factor = 1 / distance_1_3; % Since side 1-3 is 1 meter
+scaled_distance_1_2 = distance_1_2 * scale_factor;
+
+% Display the result
+disp(['The length of height h is: ', num2str(scaled_distance_1_2), ' meters']);
+
+% Save height
+height_h = scaled_distance_1_2;
+save("height_h.mat", 'height_h');
+
+% Plot rectified points on the original and rectified image
+% figure;
+
+% % Plot on the original image
+subplot(1, 2, 1);
+imshow(image);
+title('Original Image');
+hold on;
+% Connect the points as A---B, B---D, D---C, C---A
+plot([A(1), B(1), D(1), C(1), A(1)], ...
+     [A(2), B(2), D(2), C(2), A(2)], 'g-', 'LineWidth', 2);
+scatter(A(1), A(2), 'ro', 'filled'); % Mark A
+scatter(B(1), B(2), 'ro', 'filled'); % Mark B
+scatter(C(1), C(2), 'ro', 'filled'); % Mark C
+scatter(D(1), D(2), 'ro', 'filled'); % Mark D
+
+% Plot on the rectified image
+subplot(1, 2, 2);
+imshow(rectified_image);
+title('Rectified Vertical Face');
+hold on;
+% Connect the points as A---B, B---D, D---C, C---A
+plot([A_vert(1), B_vert(1), D_vert(1), C_vert(1), A_vert(1)], ...
+     [A_vert(2), B_vert(2), D_vert(2), C_vert(2), A_vert(2)], 'b-', 'LineWidth', 2);
+scatter(A_vert(1), A_vert(2), 'yo', 'filled'); % Mark A
+scatter(B_vert(1), B_vert(2), 'yo', 'filled'); % Mark B
+scatter(C_vert(1), C_vert(2), 'yo', 'filled'); % Mark C
+scatter(D_vert(1), D_vert(2), 'yo', 'filled'); % Mark D
+xlim([-0.66 0.11]) % Limit for displaying purposes: we want to check if the square has 90deg angles
+ylim([-0.43 -0.05])
