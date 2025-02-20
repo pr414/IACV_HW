@@ -14,6 +14,5 @@ Matlab:
 2. Write a Matlab program that implements the solutions to problems 1 – 6 and show the obtained results.
 3. Plot the rectified curve 𝑺 and show different views of the recovered 3D model of the rectangular parallelepiped.
 
-Theory assumptions were derived in cooperation with @MyKe01 (check out his repository for a different solution of the problem).
-Matlab implementation completes all points, leaving room for improvement on the feature detection (Point 1) and Camera Localization (Point 2.6).
+The Matlab implementation leaves room for improvement on the feature detection (Point 1) and Camera Localization (Point 2.6).
 External functions to derive geometrical transformations are taken from the course material.
